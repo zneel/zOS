@@ -1,2 +1,3 @@
 *.o
-cross-compiler/*
+cross-compiler
+gcc
