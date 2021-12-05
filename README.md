@@ -94,4 +94,19 @@ $TARGET-gcc
 
 ## Step 2 - x86 kernel:
 
-- create simple x86 kernel
+https://wiki.osdev.org/Bare_Bones
+
+### Bootstrap Assembly:
+
+> To start the operating system, an existing piece of software will be needed to load it. This is called the bootloader and in this tutorial you will be using GRUB. Writing your own bootloader is an advanced subject, but it is commonly done. We'll later configure the bootloader, but the operating system needs to handle when the bootloader passes control to it. The kernel is passed a very minimal environment, in which the stack is not set up yet, virtual memory is not yet enabled, hardware is not initialized, and so on.
+
+> The first task you will deal with is how the bootloader starts the kernel. OSDevers are lucky because there exists a Multiboot Standard, which describes an easy interface between the bootloader and the operating system kernel. It works by putting a few magic values in some global variables (known as a multiboot header), which is searched for by the bootloader. When it sees these values, it recognizes the kernel as multiboot compatible and it knows how to load us, and it can even forward us important information such as memory maps, but you won't need that yet.
+
+We use grub:
+https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
+
+Assemble boot.s:
+
+```sh
+i686-elf-as boot.s -o boot.o
+```
