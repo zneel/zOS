@@ -11,7 +11,11 @@ https://wiki.osdev.org/Why_do_I_need_a_Cross_Compiler
 - check current compiler target `gcc -dumpmachine` https://wiki.osdev.org/Target_Triplet
 - create a cross-compiler (i686-elf) https://wiki.osdev.org/GCC_Cross-Compiler
 
-Prepare the build: `sudo apt-get install build-essentials bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo`
+Prepare the build:
+
+```sh
+sudo apt-get install build-essentials bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo grub2-common xorriso
+```
 
 Add cross-compiler env:
 
@@ -109,4 +113,45 @@ Assemble boot.s:
 
 ```sh
 i686-elf-as boot.s -o boot.o
+```
+
+### Kernel:
+
+#### Freestanding and Hosted Environments
+
+> If you have done C or C++ programming in user-space, you have used a so-called Hosted Environment. Hosted means that there is a C standard library and other useful runtime features. Alternatively, there is the Freestanding version, which is what you are using here. Freestanding means that there is no C standard library, only what you provide yourself. However, some header files are actually not part of the C standard library, but rather the compiler. These remain available even in freestanding C source code. In this case you use <stdbool.h> to get the bool datatype, <stddef.h> to get size_t and NULL, and <stdint.h> to get the intx_t and uintx_t datatypes which are invaluable for operating systems development, where you need to make sure that the variable is of an exact size (if you used a short instead of uint16_t and the size of short changed, your VGA driver here would break!). Additionally you can access the <float.h>, <iso646.h>, <limits.h>, and <stdarg.h> headers, as they are also freestanding. GCC actually ships a few more headers, but these are special purpose.
+
+Compile the kernel:
+
+```sh
+i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+```
+
+Linking the Kernel:
+
+> You can now assemble boot.s and compile kernel.c. This produces two object files that each contain part of the kernel. To create the full and final kernel you will have to link these object files into the final kernel program, usable by the bootloader. When developing user-space programs, your toolchain ships with default scripts for linking such programs. However, these are unsuitable for kernel development and you need to provide your own customized linker script. Save the following in linker.ld:
+
+```sh
+i686-elf-gcc -T linker.ld -o zos.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
+```
+
+Check if the multiboot is valid:
+
+```sh
+grub-file --is-x86-multiboot zos.bin
+```
+
+Create a bootable image:
+
+```sh
+mkdir -p isodir/boot/grub
+cp zos.bin isodir/boot/zos.bin
+cp grub.cfg isodir/boot/grub/grub.cfg
+grub-mkrescue -o zos.iso isodir
+```
+
+Testing your operating system (QEMU):
+
+```sh
+qemu-system-i386 -cdrom zos.iso
 ```

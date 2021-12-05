@@ -1,3 +1,6 @@
 *.o
 cross-compiler
 gcc
+*.bin
+32bit-x86/isodir
+*.iso
